@@ -4,7 +4,7 @@
   "metadata": {
     "colab": {
       "provenance": [],
-      "authorship_tag": "ABX9TyNTLetEMD3zqD8Kw6MgY4th",
+      "authorship_tag": "ABX9TyOjlZ2p90LbnwypIq2XFn3u",
       "include_colab_link": true
     },
     "kernelspec": {
@@ -60,7 +60,7 @@
       "metadata": {
         "id": "dUxL7owM6XX-"
       },
-      "execution_count": 4,
+      "execution_count": 1,
       "outputs": []
     },
     {
@@ -77,9 +77,9 @@
           "base_uri": "https://localhost:8080/"
         },
         "id": "zfuBTwZH7esP",
-        "outputId": "2e2236bb-df7c-4123-9c49-b385d750a76c"
+        "outputId": "1321d4eb-27d2-467c-8adc-f6fc8a9da063"
       },
-      "execution_count": 11,
+      "execution_count": 2,
       "outputs": [
         {
           "output_type": "stream",
@@ -152,6 +152,371 @@
             " 15  tasa_asesinatos_por_100mil               3000 non-null   float64\n",
             "dtypes: float64(10), int64(5), object(1)\n",
             "memory usage: 375.1+ KB\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Variable Objetivo\n",
+        "Y_var = 'tasa_asesinatos_por_100mil'\n",
+        "\n",
+        "# Variables Predictoras para la Ejecución 1 (Conjunto Inicial)\n",
+        "X_vars_ejecucion1 = [\n",
+        "    'indice_gini',\n",
+        "    'tasa_desempleo_juvenil',\n",
+        "    'porcentaje_sin_diploma_secundaria',\n",
+        "    'ingresos_medios',\n",
+        "    'densidad_poblacional',\n",
+        "    'gasto_policial_per_capita',\n",
+        "    'inversion_programas_sociales_per_capita'\n",
+        "]\n",
+        "\n",
+        "X = df[X_vars_ejecucion1]\n",
+        "Y = df[Y_var]"
+      ],
+      "metadata": {
+        "id": "snAfOt14ihue"
+      },
+      "execution_count": 3,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Dividir los datos: 80% entrenamiento, 20% prueba\n",
+        "X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)\n",
+        "\n",
+        "print(f\"Tamaño de X_train: {X_train.shape}\")\n",
+        "print(f\"Tamaño de X_test: {X_test.shape}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "byOj2fiEjuxR",
+        "outputId": "38eeff49-493c-4fa4-a93e-d7aafc5fcebb"
+      },
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Tamaño de X_train: (2400, 7)\n",
+            "Tamaño de X_test: (600, 7)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Inicializar el escalador\n",
+        "scaler = StandardScaler()\n",
+        "\n",
+        "# Ajustar el escalador SÓLO con los datos de entrenamiento\n",
+        "scaler.fit(X_train)\n",
+        "\n",
+        "# Transformar los datos de entrenamiento y prueba\n",
+        "X_train_scaled = scaler.transform(X_train)\n",
+        "X_test_scaled = scaler.transform(X_test)"
+      ],
+      "metadata": {
+        "id": "RjutRRuojzrK"
+      },
+      "execution_count": 5,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# 1. Inicializar y entrenar el modelo con los datos escalados\n",
+        "rlm = LinearRegression()\n",
+        "rlm.fit(X_train_scaled, Y_train)\n",
+        "\n",
+        "# 2. Realizar predicciones\n",
+        "Y_pred_train_rlm = rlm.predict(X_train_scaled)\n",
+        "Y_pred_test_rlm = rlm.predict(X_test_scaled)\n",
+        "\n",
+        "# 3. Evaluar el rendimiento\n",
+        "r2_train_rlm = r2_score(Y_train, Y_pred_train_rlm)\n",
+        "r2_test_rlm = r2_score(Y_test, Y_pred_test_rlm)\n",
+        "\n",
+        "# 4. Mostrar Coeficientes (para la interpretación)\n",
+        "coeficientes = pd.DataFrame({\n",
+        "    'Variable': X_vars_ejecucion1,\n",
+        "    'Coeficiente': rlm.coef_\n",
+        "}).sort_values(by='Coeficiente', ascending=False)\n",
+        "\n",
+        "print(\"--- Regresión Lineal Múltiple (Ejecución 1) ---\")\n",
+        "print(f\"R² (Entrenamiento): {r2_train_rlm:.4f}\")\n",
+        "print(f\"R² (Prueba): {r2_test_rlm:.4f}\")\n",
+        "print(\"\\nTop 3 Coeficientes (Interpretación vs. Predicción):\")\n",
+        "print(coeficientes.head(3))\n",
+        "print(coeficientes.tail(3))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "HMTFD35ZLLv-",
+        "outputId": "460b5dac-b55f-4210-b5b7-0b650b335246"
+      },
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "--- Regresión Lineal Múltiple (Ejecución 1) ---\n",
+            "R² (Entrenamiento): 0.5336\n",
+            "R² (Prueba): 0.5533\n",
+            "\n",
+            "Top 3 Coeficientes (Interpretación vs. Predicción):\n",
+            "                            Variable  Coeficiente\n",
+            "0                        indice_gini     2.110357\n",
+            "1             tasa_desempleo_juvenil     1.604630\n",
+            "2  porcentaje_sin_diploma_secundaria     1.274626\n",
+            "                                  Variable  Coeficiente\n",
+            "6  inversion_programas_sociales_per_capita    -0.095234\n",
+            "5                gasto_policial_per_capita    -0.317031\n",
+            "3                          ingresos_medios    -0.997597\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# 1. Inicializar y entrenar el modelo\n",
+        "dt_ejec1 = DecisionTreeRegressor(random_state=42)\n",
+        "dt_ejec1.fit(X_train, Y_train) # Usamos X_train sin escalar para modelos de árbol\n",
+        "\n",
+        "# 2. Realizar predicciones y evaluar\n",
+        "Y_pred_train_dt1 = dt_ejec1.predict(X_train)\n",
+        "Y_pred_test_dt1 = dt_ejec1.predict(X_test)\n",
+        "\n",
+        "r2_train_dt1 = r2_score(Y_train, Y_pred_train_dt1)\n",
+        "r2_test_dt1 = r2_score(Y_test, Y_pred_test_dt1)\n",
+        "\n",
+        "print(\"--- Árbol de Decisión (Ejecución 1 - Estándar) ---\")\n",
+        "print(f\"R² (Entrenamiento): {r2_train_dt1:.4f}\")\n",
+        "print(f\"R² (Prueba): {r2_test_dt1:.4f}\")\n",
+        "\n",
+        "# El gran *gap* entre R² de Entrenamiento (cercano a 1.0) y R² de Prueba demuestra el **sobreajuste**."
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "HwPHWtpiLWJf",
+        "outputId": "9ce8ca09-1963-4501-d366-dc62a6c623e6"
+      },
+      "execution_count": 7,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "--- Árbol de Decisión (Ejecución 1 - Estándar) ---\n",
+            "R² (Entrenamiento): 1.0000\n",
+            "R² (Prueba): 0.0427\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Ajuste: Aumentar la profundidad mínima para podar el árbol\n",
+        "dt_ejec2 = DecisionTreeRegressor(max_depth=5, min_samples_leaf=10, random_state=42)\n",
+        "dt_ejec2.fit(X_train, Y_train)\n",
+        "\n",
+        "Y_pred_train_dt2 = dt_ejec2.predict(X_train)\n",
+        "Y_pred_test_dt2 = dt_ejec2.predict(X_test)\n",
+        "\n",
+        "r2_train_dt2 = r2_score(Y_train, Y_pred_train_dt2)\n",
+        "r2_test_dt2 = r2_score(Y_test, Y_pred_test_dt2)\n",
+        "\n",
+        "print(\"\\n--- Árbol de Decisión (Ejecución 2 - Ajustado) ---\")\n",
+        "print(f\"R² (Entrenamiento): {r2_train_dt2:.4f}\")\n",
+        "print(f\"R² (Prueba): {r2_test_dt2:.4f}\")\n",
+        "print(f\"Diferencia R² (Estándar): {r2_train_dt1 - r2_test_dt1:.4f}\")\n",
+        "print(f\"Diferencia R² (Ajustado): {r2_train_dt2 - r2_test_dt2:.4f}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "qnx7eUNzLZs4",
+        "outputId": "10dca2df-db45-44b7-b892-b544e3c22076"
+      },
+      "execution_count": 8,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "--- Árbol de Decisión (Ejecución 2 - Ajustado) ---\n",
+            "R² (Entrenamiento): 0.4934\n",
+            "R² (Prueba): 0.3796\n",
+            "Diferencia R² (Estándar): 0.9573\n",
+            "Diferencia R² (Ajustado): 0.1138\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# 1. Inicializar y entrenar el modelo\n",
+        "rf_ejec1 = RandomForestRegressor(random_state=42)\n",
+        "rf_ejec1.fit(X_train, Y_train)\n",
+        "\n",
+        "# 2. Realizar predicciones y evaluar\n",
+        "Y_pred_train_rf1 = rf_ejec1.predict(X_train)\n",
+        "Y_pred_test_rf1 = rf_ejec1.predict(X_test)\n",
+        "\n",
+        "r2_train_rf1 = r2_score(Y_train, Y_pred_train_rf1)\n",
+        "r2_test_rf1 = r2_score(Y_test, Y_pred_test_rf1)\n",
+        "\n",
+        "# 3. Obtener Importancia de Características\n",
+        "importancia_rf1 = pd.DataFrame({\n",
+        "    'Variable': X_vars_ejecucion1,\n",
+        "    'Importancia': rf_ejec1.feature_importances_\n",
+        "}).sort_values(by='Importancia', ascending=False)\n",
+        "\n",
+        "print(\"--- Random Forest (Ejecución 1 - Estándar) ---\")\n",
+        "print(f\"R² (Entrenamiento): {r2_train_rf1:.4f}\")\n",
+        "print(f\"R² (Prueba): {r2_test_rf1:.4f}\")\n",
+        "print(\"\\nImportancia de Variables:\")\n",
+        "print(importancia_rf1)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ROP4qrmhLdvS",
+        "outputId": "f67e5d6b-a9c1-408e-d591-db0453308316"
+      },
+      "execution_count": 9,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "--- Random Forest (Ejecución 1 - Estándar) ---\n",
+            "R² (Entrenamiento): 0.9263\n",
+            "R² (Prueba): 0.5054\n",
+            "\n",
+            "Importancia de Variables:\n",
+            "                                  Variable  Importancia\n",
+            "0                              indice_gini     0.357128\n",
+            "2        porcentaje_sin_diploma_secundaria     0.175428\n",
+            "1                   tasa_desempleo_juvenil     0.153034\n",
+            "3                          ingresos_medios     0.118712\n",
+            "5                gasto_policial_per_capita     0.067573\n",
+            "6  inversion_programas_sociales_per_capita     0.066171\n",
+            "4                     densidad_poblacional     0.061955\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# 1. Inicializar y entrenar el modelo\n",
+        "xgb_ejec1 = XGBRegressor(random_state=42)\n",
+        "xgb_ejec1.fit(X_train, Y_train)\n",
+        "\n",
+        "# 2. Realizar predicciones y evaluar\n",
+        "Y_pred_train_xgb1 = xgb_ejec1.predict(X_train)\n",
+        "Y_pred_test_xgb1 = xgb_ejec1.predict(X_test)\n",
+        "\n",
+        "r2_train_xgb1 = r2_score(Y_train, Y_pred_train_xgb1)\n",
+        "r2_test_xgb1 = r2_score(Y_test, Y_pred_test_xgb1)\n",
+        "\n",
+        "print(\"--- XGBoost (Ejecución 1 - Estándar) ---\")\n",
+        "print(f\"R² (Entrenamiento): {r2_train_xgb1:.4f}\")\n",
+        "print(f\"R² (Prueba): {r2_test_xgb1:.4f}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "kUMGLs-yLj_7",
+        "outputId": "211508b3-a751-4d83-92ca-189fdc32ed54"
+      },
+      "execution_count": 10,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "--- XGBoost (Ejecución 1 - Estándar) ---\n",
+            "R² (Entrenamiento): 0.9750\n",
+            "R² (Prueba): 0.4405\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Ajuste: Reducir learning_rate y aumentar n_estimators\n",
+        "xgb_ejec2 = XGBRegressor(\n",
+        "    n_estimators=500,  # Aumentar\n",
+        "    learning_rate=0.01, # Reducir\n",
+        "    random_state=42\n",
+        ")\n",
+        "xgb_ejec2.fit(X_train, Y_train)\n",
+        "\n",
+        "# 2. Realizar predicciones y evaluar\n",
+        "Y_pred_train_xgb2 = xgb_ejec2.predict(X_train)\n",
+        "Y_pred_test_xgb2 = xgb_ejec2.predict(X_test)\n",
+        "\n",
+        "r2_train_xgb2 = r2_score(Y_train, Y_pred_train_xgb2)\n",
+        "r2_test_xgb2 = r2_score(Y_test, Y_pred_test_xgb2)\n",
+        "\n",
+        "print(\"\\n--- XGBoost (Ejecución 2 - Ajustado) ---\")\n",
+        "print(f\"R² (Entrenamiento): {r2_train_xgb2:.4f}\")\n",
+        "print(f\"R² (Prueba): {r2_test_xgb2:.4f}\")\n",
+        "\n",
+        "# 3. Obtener Importancia de Características\n",
+        "importancia_xgb2 = pd.DataFrame({\n",
+        "    'Variable': X_vars_ejecucion1,\n",
+        "    'Importancia': xgb_ejec2.feature_importances_\n",
+        "}).sort_values(by='Importancia', ascending=False)\n",
+        "\n",
+        "print(\"\\nImportancia de Variables (Ajustado):\")\n",
+        "print(importancia_xgb2.head(3))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "q6m2kOxpLoMv",
+        "outputId": "904c223a-d749-46f7-d745-bc9e96ebac2c"
+      },
+      "execution_count": 11,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "--- XGBoost (Ejecución 2 - Ajustado) ---\n",
+            "R² (Entrenamiento): 0.7692\n",
+            "R² (Prueba): 0.5026\n",
+            "\n",
+            "Importancia de Variables (Ajustado):\n",
+            "                            Variable  Importancia\n",
+            "0                        indice_gini     0.392162\n",
+            "2  porcentaje_sin_diploma_secundaria     0.184049\n",
+            "1             tasa_desempleo_juvenil     0.140563\n"
           ]
         }
       ]
